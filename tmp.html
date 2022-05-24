@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Groovtube BLE demo</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+        }
+
+        #left {
+            padding: 25px;
+        }
+        #right {
+            padding: 25px;
+        }
+
+        #hammer {
+            width: 25px;
+            height: 200px;
+            position: relative;
+            border: 1px solid #2727a0;
+        }
+
+        #hammer-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: darkred;
+        }
+    </style>
+</head>
+<body>
+<div id="left">
+    <p>Hi!</p>
+    <button type="button" id="request-device-button">Request Device</button>
+    <button type="button" id="connect-button">Connect to GroovTube</button>
+    <button type="button" id="calibrate-button">Calibrate</button>
+    <button type="button" id="disconnect-button">Disconnect</button>
+    <p><span id="status"></span></p>
+    <p>Breath value: <span id="breath-value"></span></p>
+</div>
+<div id="right">
+    <div id="hammer">
+        <div id="hammer-bar"></div>
+    </div>
+</div>
+<script src="umd.js"></script>
+<script>
+(function() {
+    const requestDeviceButton = document.getElementById('request-device-button') ;
+    const connectButton = document.getElementById('connect-button') ;
+    const disconnectButton = document.getElementById('disconnect-button') ;
+    const calibrateButton = document.getElementById('calibrate-button') ;
+    const statusNode = document.getElementById('status') ;
+    const breathValueNode = document.getElementById('breath-value') ;
+    const hammerBarNode = document.getElementById('hammer-bar') ;
+
+    const groovtube = new window.groovtube.GroovTubeBle(navigator.bluetooth, console.log);
+    window.groovtubeInstanfce = groovtube;
+
+    let hammerValue = 0;
+
+    const handleReadyStateChange = () => {
+        statusNode.textContent = groovtube.readyState;
+        requestDeviceButton.disabled = !groovtube.canRequestDevice;
+        connectButton.disabled = !(groovtube.canRequestDevice || groovtube.canConnect);
+        disconnectButton.disabled = !groovtube.canDisconnect;
+        calibrateButton.disabled = groovtube.readyState !== 'ready';
+    };
+
+    groovtube.on('readyStateChange', handleReadyStateChange);
+    handleReadyStateChange();
+
+    groovtube.on('breath', (breath) => {
+        breathValueNode.textContent = `${Math.round(breath * 100)}%`;
+        hammerValue -= 0.01;
+        hammerValue += 0.06 * breath;
+        hammerValue = Math.min(1, Math.max(0, hammerValue));
+    });
+
+    const updateBar = () => {
+        hammerBarNode.style.height = `${Math.round(hammerValue * 100)}%`;
+        requestAnimationFrame(updateBar);
+    };
+    updateBar();
+
+    requestDeviceButton.addEventListener('click', async () => {
+        try {
+            await groovtube.requestDevice();
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
+    connectButton.addEventListener('click', async () => {
+        try {
+            if (groovtube.readyState === 'no-device') {
+                await groovtube.requestDevice();
+            }
+            await groovtube.connect();
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
+    disconnectButton.addEventListener('click', async () => {
+        try {
+            await groovtube.disconnect();
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
+    calibrateButton.addEventListener('click', async () => {
+        try {
+            await groovtube.calibrate();
+        } catch (err) {
+            console.error(err);
+        }
+    });
+})();
+</script>
+</body>
+</html>

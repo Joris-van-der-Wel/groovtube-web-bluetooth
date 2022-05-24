@@ -1,0 +1,6 @@
+/node_modules/
+/coverage/
+/lib/
+/demo/dist/
+/package-lock.json
+/umd.js

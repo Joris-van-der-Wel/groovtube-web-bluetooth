@@ -1,0 +1,59 @@
+{
+  "name": "groovtube",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Joris van der Wel <joris@jorisvanderwel.com>",
+  "description": "Javascript library for interfacing with the GroovTube peripheral using the Web Bluetooth API",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Joris-van-der-Wel/groovtube-web-bluetooth.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Joris-van-der-Wel/groovtube-web-bluetooth/issues"
+  },
+  "homepage": "https://github.com/Joris-van-der-Wel/groovtube-web-bluetooth#readme",
+  "type": "module",
+  "module": "lib/index.js",
+  "files": [
+    "src",
+    "lib",
+    "umd.js"
+  ],
+  "scripts": {
+    "lint": "eslint --ext .ts src test",
+    "build:ts": "rm -rf lib && tsc",
+    "build:umd": "rm -f umd.js && webpack",
+    "test:unit": "c8 --all --src src ts-node-esm node_modules/mocha/bin/mocha \"test/**/*.test.ts\"",
+    "test:html-coverage": "c8 report -r html --all --src src",
+    "test": "npm run lint && npm run test:unit",
+    "demo:build": "npm run build:ts && cd demo && webpack && cp public/index.html dist/",
+    "demo:start": "npm run build:ts && cd demo && webpack-dev-server --mode development",
+    "prepublishOnly": "npm test && npm run build:ts && npm run build:umd"
+  },
+  "dependencies": {
+    "eventemitter3": "^4.0.7"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.1",
+    "@types/mocha-sugar-free": "^1.4.4",
+    "@types/sinon": "^10.0.11",
+    "@types/web-bluetooth": "0.0.14",
+    "@typescript-eslint/eslint-plugin": "^5.26.0",
+    "@typescript-eslint/parser": "^5.26.0",
+    "c8": "^7.11.3",
+    "chai": "^4.3.6",
+    "eslint": "^8.16.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "mocha": "^10.0.0",
+    "mocha-sugar-free": "^1.4.0",
+    "sinon": "^14.0.0",
+    "ts-loader": "^9.3.0",
+    "ts-node": "^10.8.0",
+    "typescript": "^4.6.4",
+    "webpack": "^5.72.1",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.9.0"
+  }
+}

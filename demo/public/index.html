@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Groovtube BLE demo</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+        }
+
+        #left {
+            padding: 25px;
+        }
+        #right {
+            padding: 25px;
+        }
+
+        #hammer {
+            width: 25px;
+            height: 200px;
+            position: relative;
+            border: 1px solid #2727a0;
+        }
+
+        #hammer-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: darkred;
+        }
+    </style>
+</head>
+<body>
+    <div id="left">
+        <p>Hi!</p>
+        <button type="button" id="request-device-button">Request Device</button>
+        <button type="button" id="connect-button">Connect to GroovTube</button>
+        <button type="button" id="calibrate-button">Calibrate</button>
+        <button type="button" id="disconnect-button">Disconnect</button>
+        <p><span id="status"></span></p>
+        <p>Breath value: <span id="breath-value"></span></p>
+    </div>
+    <div id="right">
+        <div id="hammer">
+            <div id="hammer-bar"></div>
+        </div>
+    </div>
+    <script src="bundle.js"></script>
+</body>
+</html>
