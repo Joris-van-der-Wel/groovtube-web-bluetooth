@@ -14,6 +14,12 @@ npm init
 npm install --save groovtube
 ```
 
+If you are using TypeScript you will also need the `@types/web-bluetooth` package as a dev dependency:
+
+```
+npm install --save-dev @types/web-bluetooth
+```
+
 Next, there are two options for loading the library. 
 
 ## UMD

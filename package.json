@@ -14,6 +14,7 @@
   "homepage": "https://github.com/Joris-van-der-Wel/groovtube-web-bluetooth#readme",
   "type": "module",
   "module": "lib/index.js",
+  "types": "lib/index.d.ts",
   "files": [
     "src",
     "lib",
