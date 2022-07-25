@@ -7,7 +7,7 @@ import {
 } from '../src/constants.js';
 import { AbortError } from '../src/abort.js';
 import {
-    BreathEvent, GroovTubeBle, GroovTubeBleError, ReadyStateChangeEvent,
+    BreathEvent, GroovTubeBle, GroovTubeBleError, ReadyStateChangeEvent, CalibrationStateChangeEvent,
 } from '../src/index.js';
 import { createExplicitPromise, ExplicitPromise, inspectPromise } from '../src/promise.js';
 import { assertRejected, FakeWrap, stringToArrayBuffer } from './helpers.js';
@@ -599,19 +599,33 @@ describe('GroovTubeBle', () => {
         eq(calibrationValues.length, 50);
 
         it('Should collect 50 samples of which the mean is used as the new neutral', async () => {
+            const handleCalibrationStateChange = fake<CalibrationStateChangeEvent>();
+            groovtube.on('calibrationStateChange', handleCalibrationStateChange);
+            eq(groovtube.isCalibrating, false);
+
             await groovtube.requestDevice();
             await groovtube.connect();
+            eq(groovtube.isCalibrating, false);
+            eq(handleCalibrationStateChange.callCount, 0);
 
             const handleBreath = fake<BreathEvent>();
             groovtube.on('breath', handleBreath);
 
             const calibratePromise = inspectPromise(groovtube.calibrate());
+            eq(groovtube.isCalibrating, true);
+            eq(handleCalibrationStateChange.callCount, 1);
+            deq(handleCalibrationStateChange.firstCall.args, [true]);
+
             for (const value of calibrationValues) {
                 eq(calibratePromise.state, 'pending');
                 callBreathHandler(value);
             }
 
             await calibratePromise.promise;
+            eq(groovtube.isCalibrating, false);
+            eq(handleCalibrationStateChange.callCount, 2);
+            deq(handleCalibrationStateChange.secondCall.args, [false]);
+
             // should not emit breath events during calibration
             eq(handleBreath.callCount, 0);
 
@@ -624,9 +638,14 @@ describe('GroovTubeBle', () => {
             eq(handleBreath.getCall(0).firstArg, 0);
             eq(handleBreath.getCall(1).firstArg, -0.5);
             eq(handleBreath.getCall(2).firstArg, 0.5);
+
+            eq(handleCalibrationStateChange.callCount, 2);
         });
 
         it('Should resume incomplete calibration after a reconnect', async () => {
+            const handleCalibrationStateChange = fake<CalibrationStateChangeEvent>();
+            groovtube.on('calibrationStateChange', handleCalibrationStateChange);
+
             const handleBreath = fake<BreathEvent>();
             groovtube.on('breath', handleBreath);
 
@@ -644,9 +663,11 @@ describe('GroovTubeBle', () => {
             eq(groovtube.readyState, 'ready');
             serverMock.connected = false;
             await clock.tickAsync(TICK_DELAY);
+            eq(groovtube.isCalibrating, true); // isCalibrating should be true even while disconnected
             eq(groovtube.readyState, 'connecting');
             await clock.tickAsync(CONNECT_DELAY - TICK_DELAY);
             eq(groovtube.readyState, 'ready');
+            eq(groovtube.isCalibrating, true);
 
             for (const value of calibrationValues.slice(25, 50)) {
                 eq(calibratePromise.state, 'pending');
@@ -654,11 +675,14 @@ describe('GroovTubeBle', () => {
             }
 
             await calibratePromise.promise;
+            eq(groovtube.isCalibrating, false);
 
             groovtube.deadZone = 0;
             callBreathHandler('840'); // neutral value (post calibration)
             eq(handleBreath.callCount, 1);
             eq(handleBreath.getCall(0).firstArg, 0);
+
+            eq(handleCalibrationStateChange.callCount, 2);
         });
 
         it('Should memorize the calibration between reconnects', async () => {

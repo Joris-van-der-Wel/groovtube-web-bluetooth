@@ -209,10 +209,12 @@ Properties:
 * [`canRequestDevice: boolean`](#api-GroovTubeBle-canRequestDevice)
 * [`canConnect: boolean`](#api-GroovTubeBle-canConnect)
 * [`canDisconnect: boolean`](#api-GroovTubeBle-canDisconnect)
+* [`isCalibrating: boolean`](#api-GroovTubeBle-isCalibrating)
 * [`breathValue: number | null`](#api-GroovTubeBle-breathValue)
 
 Methods:
 * [`on("readyStateChange", (string) => void)`](#api-GroovTubeBle-on-readyStateChange)
+* [`on("calibrationStateChange", (string) => void)`](#api-GroovTubeBle-on-calibrationStateChange)
 * [`on("breath", (number) => void)`](#api-GroovTubeBle-on-breath)
 * [`on("error", (GroovTubeBleError) => void)`](#api-GroovTubeBle-on-error)
 * [`removeListener(string, ?Function)`](#api-GroovTubeBle-removeListener)
@@ -260,6 +262,9 @@ Returns whether the instance is in a valid state for [`connect()`](#api-GroovTub
 ### <a id="api-GroovTubeBle-canDisconnect"></a>`canDisconnect: boolean`
 Returns whether the instance is in a valid state for [`disconnect()`](#api-GroovTubeBle-disconnect) to be called. This is a convenience for checking if the [`readyState`](#api-GroovTubeBle-readyState) is `"connecting"` or `"ready"`.
 
+### <a id="api-GroovTubeBle-isCalibrating"></a>`isCalibrating: boolean`
+Returns whether the instance is currently calibrating the device. This is a convenient alternative to tracking the `Promise` returned by [`calibrate()`](#api-GroovTubeBle-calibrate).
+
 ### <a id="api-GroovTubeBle-breathValue"></a>`breathValue: number | null`
 Returns the last read breath sensor value. This value is between -1 and 1, it represents the strength of the sip or puff. Sips are represented by a negative fraction, puffs by a positive fraction. If no value has been read, if there is no active connection the value will be `null`.
 
@@ -283,6 +288,19 @@ Parameters:
 * `listener: (readyState: string) => void`
 
 Registers a function to be called whenever the `readyState` on this instance changes. The new value for [`readyState`](#api-GroovTubeBle-readyState) will be passed as the first argument.
+
+```js
+gt.on('readyStateChange', readyState => {
+    console.log('The ready state has changed to', readyState);
+});
+```
+
+### <a id="api-GroovTubeBle-on-calibrationStateChange"></a>`on("calibrationStateChange", (string) => void)`
+Parameters:
+* `eventName: "calibrationStateChange"`
+* `listener: (calibrating: boolean) => void`
+
+Registers a function to be called whenever the `isCalibrating` value on this instance changes. The new value for [`isCalibrating`](#api-GroovTubeBle-isCalibrating) will be passed as the first argument.
 
 ```js
 gt.on('readyStateChange', readyState => {

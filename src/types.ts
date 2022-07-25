@@ -12,10 +12,11 @@ export type Constructor<T, A extends any[] = any> = abstract new (...args: A) =>
  * ready : The connection has been established. Breath values will be polled for continuously while in the "ready" state.
  */
 export type ReadyState = 'no-device' | 'requesting-device' | 'have-device' | 'connecting' | 'ready';
-export type EventNames = 'error' | 'readyStateChange' | 'breath';
+export type EventNames = 'error' | 'readyStateChange' | 'calibrationStateChange' | 'breath';
 
 export type ErrorEvent = [error: GroovTubeBleError];
 export type ReadyStateChangeEvent = [readyState: ReadyState];
+export type CalibrationStateChangeEvent = [calibrating: boolean];
 export type BreathEvent = [breath: number];
 export type Listener<A extends any[]> = (...args: A) => void;
 

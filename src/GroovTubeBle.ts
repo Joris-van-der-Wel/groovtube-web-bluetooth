@@ -7,7 +7,7 @@ import {
 import { isReadyStateTransitionOk } from './readyState.js';
 import {
     ReadyState, EventNames, ErrorEvent, ReadyStateChangeEvent, BreathEvent, Listener, GattConnection, GroovTubeBleLogEntry,
-    GroovTubeBleLogger, CalibrationState,
+    GroovTubeBleLogger, CalibrationState, CalibrationStateChangeEvent,
 } from './types.js';
 import { calculateMean, interpretBreathSensorValue, parseBreathSensorData } from './math.js';
 import withAbortable from './abort.js';
@@ -112,6 +112,14 @@ export class GroovTubeBle {
     }
 
     /**
+     * Returns whether the instance is currently calibrating the device. This is a convenient alternative to tracking
+     * the Promise returned by calibrate().
+     */
+    public get isCalibrating(): boolean {
+        return Boolean(this._calibration.promise);
+    }
+
+    /**
      * Returns the last read breath sensor value. This value is between -1 and 1, it represents the strength of the sip
      * or puff. Sips are represented by a negative fraction, puffs by a positive fraction. If no value has been read, if
      * there is no active connection the value will be `null`.
@@ -135,6 +143,12 @@ export class GroovTubeBle {
      * `readyState` will be passed as the first argument.
      */
     public on(eventName: 'readyStateChange', listener: Listener<ReadyStateChangeEvent>): void;
+
+    /**
+     * Registers a function to be called whenever the `isCalibrating` value on this instance changes. The new value for
+     * `isCalibrating` will be passed as the first argument.
+     */
+    public on(eventName: 'calibrationStateChange', listener: Listener<CalibrationStateChangeEvent>): void;
 
     /**
      * Registers a function to be called whenever the `breathValue` on this instance changes. The new value for `breathValue` will be passed
@@ -274,9 +288,16 @@ export class GroovTubeBle {
      * while this method is busy.
      */
     public async calibrate(): Promise<void> {
+        // were we already calibrating? in which case the calibration is restarted from scratch
+        const wasCalibrating = this.isCalibrating;
         const calibration = this._calibration;
         calibration.samples.length = 0;
         calibration.promise = createExplicitPromise();
+
+        if (!wasCalibrating) {
+            this._emit('calibrationStateChange', this.isCalibrating);
+        }
+
         await calibration.promise.promise;
     }
 
@@ -307,6 +328,7 @@ export class GroovTubeBle {
     private _logError(data: Record<string, unknown>, msg: string) { this._log(50, data, msg); }
 
     private _emit(eventName: 'readyStateChange', ...args: ReadyStateChangeEvent): void;
+    private _emit(eventName: 'calibrationStateChange', ...args: CalibrationStateChangeEvent): void;
     private _emit(eventName: 'breath', ...args: BreathEvent): void;
     private _emit(eventName: 'error', ...args: ErrorEvent): void;
     private _emit(eventName: EventNames, ...args: any): void {
@@ -426,6 +448,7 @@ export class GroovTubeBle {
                 calibration.mean = mean;
                 calibration.promise.resolve();
                 calibration.promise = null;
+                this._emit('calibrationStateChange', this.isCalibrating);
             }
         } else {
             const { deadZone } = this;
